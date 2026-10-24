@@ -40,26 +40,59 @@ img {
   display: block;
 }
 
+/* =========================================================
+   App shell
+   ========================================================= */
 .app-shell {
   display: flex;
   min-height: 100vh;
 }
 
+/* --- Sidebar wrap (off-canvas on mobile) --- */
+.sidebar-wrap {
+  width: 260px;
+  flex-shrink: 0;
+}
+
+/* --- Sidebar --- */
 .sidebar {
   width: 260px;
+  height: 100vh;
+  position: sticky;
+  top: 0;
   background: #171d2d;
   color: #fff;
-  padding: 24px 16px;
+  padding: 20px 14px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
+  overflow-y: auto;
+}
+
+.sidebar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sidebar-close {
+  display: none;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #fff;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  place-items: center;
+  flex-shrink: 0;
 }
 
 .brand-block {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 8px 10px;
+  padding: 6px 4px;
 }
 
 .brand-badge {
@@ -69,6 +102,7 @@ img {
   background: linear-gradient(135deg, var(--primary), #ff9f6e);
   display: grid;
   place-items: center;
+  flex-shrink: 0;
 }
 
 .brand-block h3 {
@@ -84,19 +118,22 @@ img {
 .sidebar-nav {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
 }
 
 .nav-item {
   background: transparent;
   border: none;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.82);
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
+  gap: 12px;
+  padding: 12px 14px;
   border-radius: 12px;
   text-align: left;
+  font-size: 0.95rem;
+  min-height: 44px; /* touch-friendly */
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .nav-item.active,
@@ -114,6 +151,7 @@ img {
   padding: 12px 10px;
 }
 
+/* --- Content shell --- */
 .content-shell {
   flex: 1;
   display: flex;
@@ -125,13 +163,28 @@ img {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 24px 28px;
+  gap: 12px;
+  padding: 16px 20px;
   background: var(--panel);
   border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
 }
 
 .topbar h2 {
-  margin: 4px 0 0;
+  margin: 2px 0 0;
+  font-size: 1.1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .eyebrow {
@@ -146,7 +199,8 @@ img {
 .topbar-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
 .icon-button {
@@ -156,16 +210,31 @@ img {
   border-radius: 10px;
   background: white;
   color: var(--text);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.menu-toggle {
+  display: none;
 }
 
 .profile-pill {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   background: #fff;
   border: 1px solid var(--border);
   border-radius: 999px;
-  padding: 8px 12px;
+  padding: 6px 10px;
+}
+
+.profile-name {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.9rem;
 }
 
 .logout-button {
@@ -180,9 +249,13 @@ img {
 }
 
 .content-body {
-  padding: 24px 28px 40px;
+  padding: 20px;
+  width: 100%;
 }
 
+/* =========================================================
+   Page primitives
+   ========================================================= */
 .page-header {
   margin-bottom: 20px;
 }
@@ -221,6 +294,7 @@ img {
 
 .stat-card strong {
   font-size: 1.8rem;
+  word-break: break-word;
 }
 
 .panel-grid {
@@ -281,6 +355,7 @@ input, select, textarea {
   border-radius: 10px;
   padding: 10px 12px;
   background: white;
+  min-height: 44px; /* touch-friendly */
 }
 
 textarea {
@@ -295,14 +370,19 @@ textarea {
   border-radius: 10px;
   padding: 12px 16px;
   font-weight: 600;
+  min-height: 44px;
 }
 
 .span-two {
   grid-column: span 2;
 }
 
+/* =========================================================
+   Tables
+   ========================================================= */
 .table-wrap {
   overflow: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 table {
@@ -314,6 +394,7 @@ th, td {
   text-align: left;
   padding: 12px 10px;
   border-bottom: 1px solid var(--border);
+  white-space: nowrap;
 }
 
 .chip-list {
@@ -332,6 +413,9 @@ th, td {
   font-weight: 600;
 }
 
+/* =========================================================
+   POS
+   ========================================================= */
 .pos-layout {
   display: grid;
   grid-template-columns: 1.6fr 0.9fr;
@@ -365,6 +449,7 @@ th, td {
   background: #fff;
   color: var(--muted);
   padding: 8px 12px;
+  min-height: 38px;
 }
 
 .pill.active {
@@ -375,7 +460,7 @@ th, td {
 
 .product-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 14px;
 }
 
@@ -479,15 +564,19 @@ th, td {
   width: 100%;
 }
 
+/* =========================================================
+   Auth
+   ========================================================= */
 .auth-page {
   min-height: 100vh;
   display: grid;
   place-items: center;
   background: linear-gradient(135deg, #fff2eb, #eef4ff);
+  padding: 20px;
 }
 
 .auth-card {
-  width: min(420px, 90vw);
+  width: min(420px, 100%);
   background: white;
   border: 1px solid var(--border);
   border-radius: 18px;
@@ -530,20 +619,180 @@ th, td {
   color: var(--muted);
 }
 
+/* =========================================================
+   Overlay (hidden on desktop)
+   ========================================================= */
+.sidebar-overlay {
+  display: none;
+}
+
+/* =========================================================
+   RESPONSIVE — Tablet & Mobile (≤ 900px)
+   ========================================================= */
 @media (max-width: 900px) {
-  .app-shell {
-    flex-direction: column;
+  /* Off-canvas sidebar */
+  .sidebar-wrap {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 280px;
+    max-width: 82vw;
+    z-index: 60;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.25);
+  }
+
+  .sidebar-wrap.open {
+    transform: translateX(0);
   }
 
   .sidebar {
     width: 100%;
+    height: 100%;
+    position: relative;
+    padding-top: 16px;
   }
 
+  .sidebar-close {
+    display: grid;
+  }
+
+  /* Overlay */
+  .sidebar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+    z-index: 50;
+    animation: fadeIn 0.2s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* Show hamburger, hide extra topbar bits */
+  .menu-toggle {
+    display: grid;
+    place-items: center;
+  }
+
+  .topbar .eyebrow {
+    display: none;
+  }
+
+  .topbar-actions .icon-button:not(.menu-toggle) {
+    display: none;
+  }
+
+  .logout-text {
+    display: none;
+  }
+
+  .profile-name {
+    max-width: 90px;
+  }
+
+  /* Collapse grids */
   .stats-grid,
   .secondary-grid,
   .panel-grid,
   .two-col-layout,
   .pos-layout {
     grid-template-columns: 1fr;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .span-two {
+    grid-column: span 1;
+  }
+
+  /* Spacing */
+  .content-body {
+    padding: 16px 14px 32px;
+  }
+
+  .topbar {
+    padding: 12px 14px;
+  }
+
+  .page-header h1 {
+    font-size: 1.5rem;
+  }
+
+  /* Touch-friendly controls */
+  .primary-button {
+    padding: 14px 16px;
+    font-size: 1rem;
+  }
+
+  .pill {
+    padding: 10px 14px;
+  }
+
+  /* POS */
+  .product-grid {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 10px;
+  }
+
+  .pos-page .bill-list {
+    max-height: none;
+  }
+
+  /* Make bill summary + checkout sticky on mobile */
+  .pos-page .bill-summary {
+    position: sticky;
+    bottom: 0;
+    background: var(--panel);
+    padding-bottom: 8px;
+  }
+}
+
+/* =========================================================
+   RESPONSIVE — Small phones (≤ 480px)
+   ========================================================= */
+@media (max-width: 480px) {
+  .topbar h2 {
+    font-size: 1rem;
+  }
+
+  .product-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .profile-pill {
+    padding: 6px 8px;
+    gap: 6px;
+  }
+
+  .logout-button {
+    padding: 8px;
+  }
+
+  .stat-card {
+    padding: 16px;
+  }
+
+  .stat-card strong {
+    font-size: 1.4rem;
+  }
+
+  .panel {
+    padding: 16px;
+  }
+
+  .auth-card {
+    padding: 24px 20px;
+  }
+
+  .auth-header h1 {
+    font-size: 1.4rem;
   }
 }

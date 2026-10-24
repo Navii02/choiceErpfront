@@ -4,27 +4,57 @@ import api from '../services/api';
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('bakery-user') || 'null'));
+  // Guard JSON.parse so a corrupt localStorage entry can't crash the app.
+  const [user, setUser] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('bakery-user') || 'null');
+    } catch {
+      return null;
+    }
+  });
   const [token, setToken] = useState(() => localStorage.getItem('bakery-token') || '');
 
+  // authReady flips to true once the initial /auth/me check settles
+  // (or immediately if there's no token to verify).
+  const [authReady, setAuthReady] = useState(false);
+
   useEffect(() => {
-    if (token) {
-      api
-        .get('/auth/me')
-        .then(({ data }) => {
-          const userData = data?.data?.user;
-          if (userData) {
-            setUser(userData);
-            localStorage.setItem('bakery-user', JSON.stringify(userData));
-          }
-        })
-        .catch(() => {
+    if (!token) {
+      setAuthReady(true);
+      return;
+    }
+
+    let cancelled = false;
+
+    api
+      .get('/auth/me')
+      .then(({ data }) => {
+        if (cancelled) return;
+        const userData = data?.data?.user;
+        if (userData) {
+          setUser(userData);
+          localStorage.setItem('bakery-user', JSON.stringify(userData));
+        }
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        // Only clear the session on a genuine auth failure.
+        // Network errors / 5xx / offline should NOT log the user out —
+        // we keep the cached user and let the app work offline.
+        if (err?.response?.status === 401) {
           localStorage.removeItem('bakery-token');
           localStorage.removeItem('bakery-user');
           setUser(null);
           setToken('');
-        });
-    }
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setAuthReady(true);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [token]);
 
   const login = async (email, password) => {
@@ -35,6 +65,7 @@ export function AuthProvider({ children }) {
     localStorage.setItem('bakery-user', JSON.stringify(userData));
     setToken(authToken);
     setUser(userData);
+    setAuthReady(true);
     return response.data;
   };
 
@@ -43,9 +74,13 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('bakery-user');
     setUser(null);
     setToken('');
+    setAuthReady(true);
   };
 
-  const value = useMemo(() => ({ user, token, login, logout }), [user, token]);
+  const value = useMemo(
+    () => ({ user, token, authReady, login, logout }),
+    [user, token, authReady]
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
