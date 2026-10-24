@@ -6,13 +6,13 @@ export async function enqueueInvoice({ items, customerId, paymentMethod, totals 
   const sequence = await nextSequence();
 
   const invoice = {
-    clientInvoiceId: crypto.randomUUID(),   // idempotency key
+    clientInvoiceId: crypto.randomUUID(),
     deviceId,
-    sequence,                               // monotonic per device
-    items,                                  // [{ productId, name, qty, price }]
+    sequence,
+    items,
     customerId: customerId || null,
     paymentMethod: paymentMethod || 'cash',
-    totals,                                 // { subtotal, tax, grandTotal }
+    totals,
     createdAt: new Date().toISOString(),
     syncStatus: 'pending',
     attempts: 0,
@@ -42,6 +42,15 @@ export async function markSyncing(ids) {
     if (inv) await tx.store.put({ ...inv, syncStatus: 'syncing' });
   }
   await tx.done;
+}
+
+/** ✅ Revert a stuck `syncing` row back to `pending` (used on auth abort). */
+export async function markPending(id) {
+  const db = await getDb();
+  const inv = await db.get('invoices', id);
+  if (!inv) return;
+  if (inv.syncStatus !== 'syncing') return;
+  await db.put('invoices', { ...inv, syncStatus: 'pending' });
 }
 
 export async function markSynced(id, serverResponse) {

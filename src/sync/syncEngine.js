@@ -6,7 +6,7 @@ import {
 
 const SYNC_INTERVAL_MS = 2 * 60 * 60 * 1000;     // 2 hours
 const BATCH_SIZE = 25;
-const MAX_ATTEMPTS = 5;
+const MAX_ATTEMPTS = 10;
 
 let timer = null;
 let running = false;

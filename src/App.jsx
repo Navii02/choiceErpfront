@@ -16,8 +16,6 @@ import { startSyncEngine, stopSyncEngine } from './sync/syncEngine';
 function ProtectedRoute({ children }) {
   const { user, authReady } = useAuth();
 
-  // Wait until the initial /auth/me check settles before deciding
-  // whether to redirect. Prevents the "refresh → kicked to /login" bug.
   if (!authReady) {
     return (
       <div className="auth-page">
@@ -35,27 +33,26 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
-/**
- * Wraps a page in the Layout and derives currentPath from the URL
- * so we don't have to hand-write currentPath on every route.
- */
 function AppShell({ children }) {
   const { pathname } = useLocation();
   return <Layout currentPath={pathname}>{children}</Layout>;
 }
 
-/** Keeps sync engine tied to auth lifecycle. */
+/**
+ * ✅ Only start the sync engine AFTER auth is settled AND we have a token.
+ *    This prevents firing POST /sales/pos with a stale/missing token → 401.
+ */
 function SyncEngineBridge() {
-  const { user } = useAuth();
+  const { user, token, authReady } = useAuth();
 
   useEffect(() => {
-    if (!user) {
+    if (!authReady || !user || !token) {
       stopSyncEngine();
       return undefined;
     }
     startSyncEngine();
     return () => stopSyncEngine();
-  }, [user]);
+  }, [user, token, authReady]);
 
   return null;
 }
@@ -69,70 +66,14 @@ function AppContent() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
 
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <AppShell><DashboardPage /></AppShell>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/products"
-          element={
-            <ProtectedRoute>
-              <AppShell><ProductsPage /></AppShell>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/categories"
-          element={
-            <ProtectedRoute>
-              <AppShell><CategoriesPage /></AppShell>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/customers"
-          element={
-            <ProtectedRoute>
-              <AppShell><CustomersPage /></AppShell>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/pos"
-          element={
-            <ProtectedRoute>
-              <AppShell><POSPage /></AppShell>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/inventory"
-          element={
-            <ProtectedRoute>
-              <AppShell><InventoryPage /></AppShell>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/reports"
-          element={
-            <ProtectedRoute>
-              <AppShell><ReportsPage /></AppShell>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/sync"
-          element={
-            <ProtectedRoute>
-              <AppShell><SyncStatusPage /></AppShell>
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/" element={<ProtectedRoute><AppShell><DashboardPage /></AppShell></ProtectedRoute>} />
+        <Route path="/products" element={<ProtectedRoute><AppShell><ProductsPage /></AppShell></ProtectedRoute>} />
+        <Route path="/categories" element={<ProtectedRoute><AppShell><CategoriesPage /></AppShell></ProtectedRoute>} />
+        <Route path="/customers" element={<ProtectedRoute><AppShell><CustomersPage /></AppShell></ProtectedRoute>} />
+        <Route path="/pos" element={<ProtectedRoute><AppShell><POSPage /></AppShell></ProtectedRoute>} />
+        <Route path="/inventory" element={<ProtectedRoute><AppShell><InventoryPage /></AppShell></ProtectedRoute>} />
+        <Route path="/reports" element={<ProtectedRoute><AppShell><ReportsPage /></AppShell></ProtectedRoute>} />
+        <Route path="/sync" element={<ProtectedRoute><AppShell><SyncStatusPage /></AppShell></ProtectedRoute>} />
 
         <Route
           path="*"

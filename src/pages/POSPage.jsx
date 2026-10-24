@@ -21,8 +21,8 @@ export default function POSPage() {
   const [syncState, setSyncState] = useState({ phase: 'idle' });
   const [toast, setToast] = useState('');
   const [checkoutLock, setCheckoutLock] = useState(false);
+  const [billOpen, setBillOpen] = useState(false); // mobile expand toggle
 
-  // 1. Load products: try network, fall back to IndexedDB cache
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
@@ -44,10 +44,8 @@ export default function POSPage() {
     return () => { cancelled = true; };
   }, []);
 
-  // 2. Subscribe to sync state
   useEffect(() => onSyncUpdate(setSyncState), []);
 
-  // 3. Derived lists
   const categories = useMemo(() => {
     const set = new Set(products.map((p) => p.category?.name).filter(Boolean));
     return ['All', ...set];
@@ -64,7 +62,6 @@ export default function POSPage() {
     });
   }, [products, selectedCategory, search]);
 
-  // 4. Bill operations
   const addToBill = (product) => {
     setBill((cur) => {
       const existing = cur.find((i) => i._id === product._id);
@@ -75,6 +72,7 @@ export default function POSPage() {
       }
       return [...cur, { ...product, quantity: 1 }];
     });
+    setBillOpen(true); // open bill on mobile after adding
   };
 
   const incrementItem = (id) => {
@@ -98,10 +96,8 @@ export default function POSPage() {
   };
 
   const removeItem = (id) => setBill((cur) => cur.filter((i) => i._id !== id));
-
   const clearBill = () => setBill([]);
 
-  // 5. Totals
   const totals = useMemo(() => {
     const subtotal = bill.reduce(
       (sum, i) => sum + Number(i.sellingPrice || 0) * Number(i.quantity || 0),
@@ -117,7 +113,6 @@ export default function POSPage() {
     [bill]
   );
 
-  // 6. Checkout
   const settleSale = async () => {
     if (!bill.length || checkoutLock) return;
 
@@ -135,8 +130,8 @@ export default function POSPage() {
       });
 
       setBill([]);
+      setBillOpen(false);
       setToast(`Saved locally · Invoice ${invoice.clientInvoiceId.slice(0, 8)}`);
-
       syncAll().catch(() => {});
 
       setTimeout(async () => {
@@ -154,7 +149,6 @@ export default function POSPage() {
 
   return (
     <div className="pos-page">
-      {/* Header */}
       <div className="page-header pos-header">
         <div>
           <p className="eyebrow">POS / Billing</p>
@@ -173,7 +167,6 @@ export default function POSPage() {
       {toast && <div className="pos-toast">{toast}</div>}
 
       <div className="pos-layout">
-        {/* Left: catalogue */}
         <section className="panel pos-panel">
           <div className="toolbar-row">
             <div className="pos-search">
@@ -239,8 +232,23 @@ export default function POSPage() {
           )}
         </section>
 
-        {/* Right: bill */}
-        <aside className="panel bill-panel">
+        <aside className={`panel bill-panel ${billOpen ? '' : 'is-collapsed'}`}>
+          <button
+            type="button"
+            className="bill-toggle"
+            onClick={() => setBillOpen((v) => !v)}
+            aria-expanded={billOpen}
+          >
+            <span>
+              {bill.length === 0
+                ? 'Bill empty'
+                : `${itemCount} item${itemCount === 1 ? '' : 's'} · ₹${totals.grandTotal}`}
+            </span>
+            <span className="bill-toggle-cta">
+              {billOpen ? 'Hide' : bill.length ? 'View bill' : 'Add items'}
+            </span>
+          </button>
+
           <div className="bill-header">
             <h3>Current bill</h3>
             {bill.length > 0 && (
@@ -258,9 +266,7 @@ export default function POSPage() {
                 <div key={item._id} className="bill-item">
                   <div className="bill-item-info">
                     <strong>{item.name}</strong>
-                    <span className="muted">
-                      ₹{Number(item.sellingPrice || 0)} each
-                    </span>
+                    <span className="muted">₹{Number(item.sellingPrice || 0)} each</span>
                   </div>
 
                   <div className="bill-controls">
@@ -269,9 +275,7 @@ export default function POSPage() {
                       className="qty-btn"
                       onClick={() => decrementItem(item._id)}
                       aria-label={`Decrease quantity of ${item.name}`}
-                    >
-                      −
-                    </button>
+                    >−</button>
                     <input
                       type="number"
                       inputMode="numeric"
@@ -285,9 +289,7 @@ export default function POSPage() {
                       className="qty-btn"
                       onClick={() => incrementItem(item._id)}
                       aria-label={`Increase quantity of ${item.name}`}
-                    >
-                      +
-                    </button>
+                    >+</button>
                   </div>
 
                   <div className="bill-line-total">
@@ -299,9 +301,7 @@ export default function POSPage() {
                     className="remove-btn"
                     onClick={() => removeItem(item._id)}
                     aria-label={`Remove ${item.name}`}
-                  >
-                    ×
-                  </button>
+                  >×</button>
                 </div>
               ))}
             </div>
@@ -337,7 +337,7 @@ export default function POSPage() {
             onClick={settleSale}
             disabled={!bill.length || checkoutLock}
           >
-            {checkoutLock ? 'Saving…' : `Save & Generate invoice · ₹${totals.grandTotal}`}
+            {checkoutLock ? 'Saving…' : `Save · ₹${totals.grandTotal}`}
           </button>
         </aside>
       </div>

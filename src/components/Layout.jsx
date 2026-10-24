@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LogOut, Bell, Menu, X } from 'lucide-react';
+import { LogOut, Bell, Menu } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Sidebar from './Sidebar';
@@ -21,7 +21,6 @@ export default function Layout({ children, currentPath }) {
 
   return (
     <div className="app-shell">
-      {/* Mobile overlay */}
       {sidebarOpen && (
         <div
           className="sidebar-overlay"
@@ -47,6 +46,7 @@ export default function Layout({ children, currentPath }) {
               className="icon-button menu-toggle"
               onClick={() => setSidebarOpen(true)}
               aria-label="Open menu"
+              aria-expanded={sidebarOpen}
             >
               <Menu size={20} />
             </button>
@@ -56,11 +56,19 @@ export default function Layout({ children, currentPath }) {
             </div>
           </div>
           <div className="topbar-actions">
-            <button type="button" className="icon-button"><Bell size={18} /></button>
+            <button type="button" className="icon-button" aria-label="Notifications">
+              <Bell size={18} />
+            </button>
             <div className="profile-pill">
               <span className="profile-name">{user?.name || 'User'}</span>
-              <button type="button" className="logout-button" onClick={handleLogout}>
-                <LogOut size={16} /> <span className="logout-text">Log out</span>
+              <button
+                type="button"
+                className="logout-button"
+                onClick={handleLogout}
+                aria-label="Log out"
+              >
+                <LogOut size={16} />
+                <span className="logout-text">Log out</span>
               </button>
             </div>
           </div>
